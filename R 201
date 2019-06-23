@@ -1,4 +1,4 @@
-#Advanced R Basics
+#Next Level R Basics
 
 library(binom)
 library(caret)
@@ -6,62 +6,255 @@ library(vcd)
 library(mice)
 library(sqldf)
 library(plyr)
-library(kernlab)
-library(arm)
 
-#Correlation Matrix/Plot...and Correlation Coefficients
-cor(TBRays[, sapply(TBRays, is.numeric)])
+TBRays$attendance[which.max(TBRays$attendance)]     #47,136
+TBRays$opposing_team[which.max(TBRays$attendance)]  #17
 
-corrplot(cor(TBRays[, sapply(TBRays, is.numeric)]))
+sum(TBRays$weekend == 1)
+sum(TBRays$is_bobblehead == 1)
+
+with(TBRays, mean(attendance))   #or   mean(TBRays$attendance)
 
 
-cor.test(TBRays$attendance, TBRays$home_win_pct)
-rcorr(as.matrix(TBRays))
+#Omitting Missing Data from a Table
+TBRays <- na.omit(TBRays)
 
-#MERGING!!!
-#Outter
-out.join <- merge(x = sales.product, y = sales.profile, by = "CustomerId", all = TRUE)
-#Left Outter
-merge(x = sales.product, y = sales.profile, by = "CustomerId", all.x = TRUE)
-#Right Outter
-merge(x = sales.product, y = sales.profile, by = "CustomerId", all.y = TRUE)
-#Cross Join
-merge(x = sales.product, y = sales.profile, by = NULL)
+#To use a dataset with NAs in an Algorithm
+model <- lm(attendance ~., data=na.omit(TBRays))
+
+#To find the # of NAs per Column
+sapply(FBData, function(x) sum(is.na(x)))
+
+#To take care of missing values
+TBRays1 <- mice(TBRays)
+TBRays1 <- complete(TBRays1)
+summary(TBRays1)
+
+#Changing Column Names!!!
+names(TBRays)[1]<-paste("home_win_pct") 
+names(TBRays)[8]<-paste("weekend") 
+
+colnames(NewTBRays) <- c("homewp", "awaywp", "weekend", "temp", "oppteam", "pctszn", "bobblehead")
+
+#Shapiro-Wilk Normality Test
+with(TBRays, shapiro.test(attendance))   #.5377
+with(TBRays, shapiro.test(home_win_pct))   #.8548
+      #want p-value > .05
+
+
+##########
+#CALCULATIONS...
+
+#To Calculate Z-Score
+z <- (72 - 65)/1.05
+      #where 72 is the observed value
+      #where 65 is the population mean
+      #where 1.05 is the population SD
+
+#To Calculate P-Value
+pnorm(-1.680919)   #.0463
+      #where -1.68 is the z-score of the value we're testing
+      #if p < .05 then reject Ho
+
+#Percentile Calculations
+qnorm(0.99, mean = 100, sd = 15)
+#finds the 99th percentile of a normal distribution w/ a mean of 100 and a sd of 15
+
+#Confidence Intervals
+binconf(sum(TBRays$is_bobblehead), n = 810, method= "asymptotic")
+      #first entry is either...a vector containing number of successes, or x = n where n is the number of successes
+      #n is either...a vector containing the number of corresponding observations...or n = x where x is the number of observations
+
+      #essentially...the upper/lower bound of the % of bobblehead giveaways in a season
+
+binom.confint(sum(TBRays$is_bobblehead), 810, methods="asymptotic")
+        #x = number of successes (or more simply, the number of 1s)
+        #n = number of trials/samples
+        #method = "exact", "ac", "wilson", "proptest", "bayes", "logit", "probit"...or "all"
+
+#One and Two Sample T-Tests
+t.test(TBRays$attendance, mu = 30000, conf.level = 0.95, alternative = "two.sided")
+      #one sample
+      #where y is the set of values we are testing (attendance)
+      #population mean is 20,000
+      #we want a 95% confidence interval
+      #the alternative is that the mean is greater than 28,034 [can use "less" "greater" "two.sided"]
+
+      #...is the mean of TBRay's attendance figures sig diff from the MLB's mean attendance figures?
+
+t.test(attendance ~ weekend, data = TBRays, paired = FALSE)
+      #two sample
+      #paired = TRUE if we want paired test
+      #2nd term (weekend in this case) must only have TWO CLASSES
+
+      #...is there a significant difference in attendance for weekends vs weekdays?
+
+#Testing Multiple Groups...
+#Chi Square
+chisq.test(TBRays$opposing_team, TBRays$attendance)
+chisq.test(TBRays$opposing_team, TBRays$is_bobblehead)
+      #for more than 2 groups
+
+      #...is there a significant diff in attendane depending on which team is in town?
 
 #or
 
-example.1 <- sqldf("SELECT CustomerId, Product, State 
-                   FROM data.frame.1
-                   JOIN data.frame.2 USING(CustomerID)")
+with(TBRays, by(attendance, opposing_team, shapiro.test))
+       #if p-value is < .05, then the attendance is statistically and sig diff for this team
 
-## left join (substitute 'right' for right join)
-example.2 <- sqldf("SELECT CustomerId, Product, State 
-                   FROM data.frame.1
-                   LEFT JOIN data.frame.2 USING(CustomerID)")
-
-#or
-
-join(data.frame1, data.frame2,
-     type = "inner")   #left, right, full, inner
+#ANOVA (1 Way)
+aov1 <- aov(attendance ~ opposing_team, data = TBRays)           
+    #1st variable = quant, 2nd variable = category >2groups
 
 
+#Testing the INTERACTION Between Variables/Groups...ANOVA (2 Way)
+aov1 <- aov(attendance ~ weekend + is_bobblehead + 
+                    weekend:is_bobblehead,
+                  data = TBRays)
 
-#Kernels!!!!!
-Myrbf <- rbfdot(sigma=0.01)
-hello <- rnorm(10)
-goodbye <- rnorm(10)
+aov1 <- aov(attendance ~ weekend*is_bobblehead,
+                  data = TBRays)
 
-Myrbf(hello, goodbye)
 
-kernlab.model <- ksvm(weekend ~., TBRays, kernel=Myrbf, C=2)
-#C = Cost = 2
+#NonParametric Tests!!!!!!!!!!
+#wilcox 1 sample
+wilcox.test(TBRays$attendance, mu=30000, conf.int=TRUE)
+      #for the values in the y vector (attendance)
+      #for a sample mean of 25,000
+      #prints 95% confidence interval
 
-kernlab.model
+#wilcox 2 sample
+wilcox.test(predict, TBRays$attendance, mu=30000, conf.int=TRUE)
+      #for the values in the x vector (predicted att)
+      #compared to the values in the y vector (actual att)
+      #prints 95% confidence interval
 
-predicted <- predict(kernlab.model, TBRays)
-predicted <- ifelse(predicted > 0.5, 1, 0)
+#wilcox paired sample
+wilcox.test(predict, TBRays$attendance, mu=30000, paired=TRUE, conf.int=TRUE)
 
-table(predicted = predicted, true = TBRays$weekend)
+#Kruskal Wallis (3+ samples)
+kruskal.test(attendance ~ opposing_team, data=TBRays)
+      #opposing team has 29 diff groups
+
+############
+
+#Creating Proportion Tables
+Table <- TBRays[TBRays$is_bobblehead == 1,]
+
+Table <- xtabs(is_bobblehead ~ opposing_team + weekend, data = TBRays)   #counts the number of times there was a bobble head GA per each team
+
+prop.table(Table)    #the proportion of bobblehead GA for each team and on weekends/weekdays
+addmargins(Table)    #the sums
+ftable(Table)
+
+xtabs(round(attendance, 2) ~ opposing_team,    #the sum of attendance figures that each opposing team draws
+      data = TBRays)
+
+prop.test(x=sum(TBRays$is_bobblehead), n=810, p=.5, correct=FALSE)
+
+table(TBRays$weekend) %>% prop.table()
+table(TBRays$opposing_team) %>% prop.table()
+
+margin.table(Table, 2)    #column margins (weekend bobblehead GAs)
+round(prop.table(Table, 2), 2) 
+
+margin.table(Table, 1)    #row margins (bobblehead GAs per team)
+round(prop.table(Table, 1), 2) 
+
+round(prop.table(Table), 2)   #cell %
+
+chisq.test(Table)
+
+#Odds Ratios
+Table <- xtabs(is_bobblehead ~ opposing_team + weekend, data = TBRays)
+
+oddsratio(Table, log=FALSE)   
+      #odds ratio for is_bobblehead and weekend
+
+fourfold(Table)  
+      #visualization of odds ratio
+
+confint(oddsratio(Table, log=FALSE), level=0.95)  
+      #confidence interval for odds ratio
+
+exp(cbind(OR=coef(lm.model), confint(lm.model)))
+      #the odds of an event happening using an ML model
+
+#Creating a Single DV
+TBRays$weekend <- ifelse(TBRays$day_of_week_effect > 5 |
+                                    TBRays$day_of_week_effect < 2, 1, 0)
+
+
+#One Hot Encoding - creating DVs to convert categorical variables to as many binary variables as there are categories
+dummy.data <- dummyVars(attendance ~., data = TBRays)
+
+dummy.model <- predict(dummy.data,newdata = TBRays)
+
+dummy.dataframe <- data.frame(dummy.model)
+
+str(dummy.dataframe)
+
+
+#Returning 1st or last few rows in a dataset
+head(data.frame("R.Part Prediction" = rpart.predict,
+                "Party Prediction" = party.predict,
+                "Random Forest Prediction" = rf.predict,
+                "Actual Outcome" = test$attendance))
+
+
+#Pre Processing Data
+preProcess.data <- preProcess(train, method='range')
+      #range, center, scale, BoxCox, YeoJohnson, expoTrans, pca, ica, spatialSign
+
+lattendancce <- log(TBRays$attendance)
+
+
+
+#ex: standardizing an x for better interpretation  (need bindrcpp package)
+TB1 <- mutate(TBRays, stemp=scale(temp))
+#creates new variable named "stemp" which standardizes the temp values by scaling them
+lm(lattendance ~., data = TB1)
+
+#ex: removing the unstandardized variables from the model
+lm.model <- lm(lattendance ~., -attendance, data= TBRays)
+
+#Standardizing Variables (returning their z-scores)
+scaledtemp <- scale(TBRays$temp)
+
+#To Compare Models
+model1 <- lm(attendance~., data=train)
+model2 <- linearRidge(attendance~., data=train)
+model3 <- bayes.lm(attendance~., data=train)
+
+anova(model1, model2, model3)
+
+anova(model.1)
+
+#To Get R2
+R2(predict, test$attendance) 
+RMSE(predict, test$attendance)
+
+
+#Using Pipes
+#first argument must be the data!!!
+#the data is the same type across a family of functions
+TBRays %>% 
+  group_by(is_bobblehead) %>% 
+  ggplot(aes(attendance, home_win_pct)) + geom_line()
+
+TBRays %>%
+  group_by(opposing_team) %>%
+  filter(day_of_week_effect == 7)
+
+
+
+
+
+
+
+
+
+
 
 
 
