@@ -1,0 +1,19 @@
+#Playing w/ FXNS
+
+best.hyp <- function(model) {
+  print("The Best Hyperparameter is....")
+  print(model$bestTune)
+  varImp(model)
+}
+
+best.hyp(ridge.cv)
+
+hyp.help <- function(orig.model, cv.model) {
+  print(orig.model$bestTune)
+  print(cv.model$bestTune)
+}
+
+hyp.help(ridge.model, ridge.cv)
+hyp.help(lasso.model, lasso.cv)
+hyp.help(rf.model, rf.cv)
+
