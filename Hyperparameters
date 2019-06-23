@@ -1,0 +1,38 @@
+#To see the model names available in caret
+
+library(caret)
+
+modelnames <- paste(names(getModelInfo()), collapse=',  ')
+modelnames
+
+#To look up the hyperparameters for each model
+modelLookup("rf")           #mtry
+modelLookup("adaboost")     #nIter, method
+modelLookup("bayesglm")     #parameter
+modelLookup("cforest")      #mtry
+modelLookup("ctree")        #mincriterion
+modelLookup("gbm")          #n.trees, interaction.depth, shrinkage, m.minobsinnode
+modelLookup("glm")          #parameter
+modelLookup("glmnet")       #alpha, lambda
+modelLookup("knn")          #k
+modelLookup("lars")         #fraction
+modelLookup("leapBackward") #nvmax
+modelLookup("leapForward")  #nvmax
+modelLookup("lm")           #intercept
+modelLookup("lmStepAIC")    #parameter
+modelLookup("logreg")       #treesize, ntrees
+modelLookup("nnet")         #size, decay
+modelLookup("penalized")    #lambda1, lambda2
+modelLookup("regLogistic")  #cost, loss, epsilon
+modelLookup("ridge")        #lambda
+modelLookup("lasso")        #fraction
+modelLookup("rpart")        #cp
+modelLookup("rvmRadial")    #sigma
+modelLookup("svmRadial")    #sigma, C (cost)
+modelLookup("treebag")      #parameter
+
+
+
+
+
+
