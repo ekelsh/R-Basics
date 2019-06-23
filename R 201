@@ -1,0 +1,69 @@
+#Advanced R Basics
+
+library(binom)
+library(caret)
+library(vcd)
+library(mice)
+library(sqldf)
+library(plyr)
+library(kernlab)
+library(arm)
+
+#Correlation Matrix/Plot...and Correlation Coefficients
+cor(TBRays[, sapply(TBRays, is.numeric)])
+
+corrplot(cor(TBRays[, sapply(TBRays, is.numeric)]))
+
+
+cor.test(TBRays$attendance, TBRays$home_win_pct)
+rcorr(as.matrix(TBRays))
+
+#MERGING!!!
+#Outter
+out.join <- merge(x = sales.product, y = sales.profile, by = "CustomerId", all = TRUE)
+#Left Outter
+merge(x = sales.product, y = sales.profile, by = "CustomerId", all.x = TRUE)
+#Right Outter
+merge(x = sales.product, y = sales.profile, by = "CustomerId", all.y = TRUE)
+#Cross Join
+merge(x = sales.product, y = sales.profile, by = NULL)
+
+#or
+
+example.1 <- sqldf("SELECT CustomerId, Product, State 
+                   FROM data.frame.1
+                   JOIN data.frame.2 USING(CustomerID)")
+
+## left join (substitute 'right' for right join)
+example.2 <- sqldf("SELECT CustomerId, Product, State 
+                   FROM data.frame.1
+                   LEFT JOIN data.frame.2 USING(CustomerID)")
+
+#or
+
+join(data.frame1, data.frame2,
+     type = "inner")   #left, right, full, inner
+
+
+
+#Kernels!!!!!
+Myrbf <- rbfdot(sigma=0.01)
+hello <- rnorm(10)
+goodbye <- rnorm(10)
+
+Myrbf(hello, goodbye)
+
+kernlab.model <- ksvm(weekend ~., TBRays, kernel=Myrbf, C=2)
+#C = Cost = 2
+
+kernlab.model
+
+predicted <- predict(kernlab.model, TBRays)
+predicted <- ifelse(predicted > 0.5, 1, 0)
+
+table(predicted = predicted, true = TBRays$weekend)
+
+
+
+
+
