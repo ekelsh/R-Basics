@@ -1,0 +1,50 @@
+#Trouble Shooting
+
+library(binom)
+library(caret)
+library(vcd)
+library(mice)
+library(sqldf)
+library(plyr)
+
+#Omitting Missing Data from a Table
+TBRays <- na.omit(TBRays)
+
+#To take care of missing values
+TBRays1 <- mice(TBRays)
+TBRays1 <- complete(TBRays1)
+summary(TBRays1)
+
+#Changing Column Names!!!
+names(TBRays)[1]<-paste("home_win_pct") 
+names(TBRays)[8]<-paste("weekend")
+
+#Remove Rows w/ Missing Data
+AttData <- na.omit(AttData) %>%
+  as_tibble
+
+#Removing Columns from Data Table
+TBRays <- subset(TBRays, select = -day_of_week_effect)
+
+#To Reset Graphics
+dev.off()
+
+{plot.new(); dev.off()}
+
+#To see the model names available in caret
+modelnames <- paste(names(getModelInfo()), collapse=',  ')
+modelnames
+
+#To look up the hyperparameters for each model
+modelLookup("rf")
+
+#If Caret Package Isn't Working....
+install.packages("lme4", dependencies = TRUE)
+library(lme4)
+methods(sigma)
+install.packages("pbkrtest", dependencies = TRUE)
+library(caret)
+
+#or
+
+install.packages("caret", dependencies = TRUE) 
