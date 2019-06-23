@@ -1,0 +1,231 @@
+#The Very Basics of R
+
+#To Read a CSV File
+batting = read.csv('Sabr101x_PitchersB.csv')
+pitching = read.csv('Sabr101x_PitchersP.csv')
+
+#Loading/Installing Packages
+install.packages("ggplot2")
+library(ggplot2)
+
+#SOS I need help!!!
+library(help = "ggplot2")              #will open an R doc window
+browseVignettes(package = "tibble")    #will open a web link
+broswVignettes()                       #to see wheich packages have vignettes
+? aov                                  #to get help regarding a function/command in R
+
+
+#Basic FXNS 
+pi
+sqrt(9)
+exp(1)
+log(3)
+options(digits=5)                      #Default # of Digits = 7 (the number of digits rounded to)
+
+
+#Creating New Variables/Data Frames/Tables/Matrixes
+Hello <- rnorm (10)                    #new variable w/ 10 random normal values
+Goodbye <- rnorm (10, 5, 2)            #new variable w/ 10 random normal values w/ mean of 5 and stdev of 2
+WAR <- 0:10                            #new variable w/ values 1 - 10 by incriments of 1
+WAR <- seq(0, 10, by = 0.5)            #new variable w/ values 1 - 10 by incriments of 0.5
+Status <- rep("active", 10)            #new variable w repeated value
+Name <- c('Panda', 'Trout', 'JJ')      #new variable w/ character strings
+
+###
+
+DataFrame <- data.frame(Name= c('Mookie Betts', 'JD Martinez', 'Andrew Benentendi'), 
+                                H = c(41,39,33), HR= c(34,39,19), SB= c(21,3,18))
+
+colnames(DataFrame)[colnames(DataFrame)=="Name"] <- "Nickname"
+          #Renames the columns in a data frame
+
+#Extracting a Single Column
+TBRays[,]        #all rows and all columns
+
+TBRays[1,]       #the 1st row + all column
+TBRays[1:2,]     #the 1st 2 rows + all columns
+TBRays[c(1,6),]  #rows #1 and #6 + all columns
+
+TBRays[, 1]      #1st column + all rows
+TBRays[1, 3:4]   #the 1st row + columns 3 and 4
+
+
+#Changing Column Names!!!
+colnames(NewTBRays) <- c("homewp", "awaywp", "weekend", "temp", "oppteam", "pctszn", "bobblehead")
+
+names(TBRays)[1]<-paste("home_win_pct") 
+names(TBRays)[8]<-paste("weekend")
+
+###
+
+Table <- table(TBRays$is_bobblehead)   #best for binary variables
+
+print("No Bobblehead vs Bobblehead")
+print(Table)
+
+###
+
+Matrix <- matrix(c(TBRays$attendance, TBRays$home_win_pct), 810, 2) 
+          #will create a matrix with attendance and home win %  w/ 810 rows and 2 columns
+dimnames(Matrix)[[2]] <- c("Att", "HWP") 
+          #names the columns in the Matrix
+
+###
+
+#Creating a List [uses similar fxns as data frames]
+Att.List <- list(OppTeam=TBRays$opposing_team, Att=TBRays$attendance,
+                 GoodAtt=TBRays$attendance > 35000)
+          #creates a list w/ variables "OppTeam", "Att", and "GoodAtt"
+          #keeps the Opposing Team output the same
+          #keeps the Attendance output the same
+          #puts T/F for the 3rd variable (whether att > 35000 or not)
+
+
+#Types of Variables
+string.variable = 'Hello World!'
+number.variable = 44.44
+boolean.variable = TRUE                #Can either be TRUE or FALSE
+complex.variable = 1-3i
+
+#Remove Rows w/ Missing Data
+AttData <- na.omit(AttData) %>%
+  as_tibble
+
+TBRays <- subset(TBRays, select = -day_of_week_effect)
+
+#Merging Data
+MergeTable <- merge(Batting,Fielding, by='playerid')
+
+TopWAR <- left_join(TopWar1, TopWar2, by='playerid', 'Name')
+TopWAR <- right_join(TopWar1, TopWar2, by='playerid', 'Name')
+
+pithit = merge(x = Batting,
+               y = Fielding, 
+               by.x = c('Season', 'playerid', 'Name'),
+               by.y = c('Season', 'playerid', 'Name'))
+
+#Find NA Values
+is.na(TBRays$attendance)
+which(is.na(TBRays$attendance))
+
+mean(SPSS_Pitcher_Data$xFIPPredict, na.rm=TRUE)    #Excludes NA From Aggregate FXNS
+
+#Exploring the Data - Basics
+ls(TBRays) %<% names(TBRays)           #To Retrieve Column Names
+str(TBRays)                            #To Retrieve Variable Types
+nrow(TBRays) %<% ncol(TBRays)          #To Retrieve the Number of Rows/Columns
+
+TBRays$attendance                      #To Select a Single Column
+data.frame(TBRays$attendance,          #To Select Multiple Columns
+           TBRays$opposing_team) 
+
+
+head(TBRays$opposing_team[TBRays$attendance < 25000], 10)
+tail(TBRays$opposing_team[TBRays$attendance < 25000], 10)
+
+#Sorting the Data - Basics
+sort(TBRays$attendance, decreasing = TRUE)
+sort(TBRays$attendance, decreasing = FALSE)
+sort(TBRays$opposing_team == 22)
+
+duplicated(TBRays$opposing_team)    #TRUE/FALSE is the variable duplicated?
+unique(TBRays$opposing_team)        #all unique values of the variable in Q
+
+cumsum(TBRays$is_bobblehead)        #cumulative sum of the variable in Q
+
+
+#Describing the Data - Basics
+describe(TBRays)
+  
+mean(TBRays$attendance)
+max(TBRays$attendance)
+sum(TBRays$attendance)
+range(TBRays$attendance)
+skew(TBRays)
+kurtosi(TBRays)                     #NOTE: multiplying 2 normal, indpt variables together will create a skewed distrib
+
+mean(TBRays$attendance[TBRays$is_bobblehead > 0
+                           & TBRays$away_win_pct > 0.5])
+mean(TBRays$attendance, na.rm=TRUE)
+
+TBRays$opposing_team[which.max(TBRays$attendance)]
+TBRays$opposing_team[which.min(TBRays$attendance)]
+
+TBRays$attendance[which(TBRays$is_bobblehead > 0)]
+TBRays$attendance[which(TBRays$temp < 0)] 
+
+cor(TBRays$attendance, TBRays$is_bobblehead)
+
+
+#Retrieving Subsets of Variables
+TBRays$attendance[7]                            #Retrieves 7th value in Attendance column
+TBRays$attendance[7:11]                         #Retrieves 7th-11th value in Attendance column
+TBRays$attendance[c(2, 4, 10, 33)]              #Retrieves 2nd, 4th, 10th, and 33rd value in Attendance column
+TBRays$attendance[-7]                           #Retrives every value except the 7th in the Attendance column
+TBRays$attendance[TBRays$attendance >= 35000]   #Retrieves all Attendance values >= 35,000
+head(TBRays, 10)                                #Retrieves 1st 10 Rows
+
+TBRays$attendance[TBRays$is_bobblehead > 0      #Retrieves all Attendance values for bobblehead nights where the away teams' win% is > 0.500
+                  & TBRays$away_win_pct > 0.5]
+TBRays$attendance[TBRays$opposing_team == 22
+                  & TBRays$temp > 0]
+
+Att.Narrow <- subset(TBRays, attendance > 30000)    #subset of entire table where Attendance > 30,000
+Att.Narrow <- filter(TBRays, attendance >30000)
+
+Att.Narrow <- subset(TBRays, attendance > 30000, 
+c("attendance","is_bobblehead","opposing_team"))    #to show only certain columns in new subselect table
+
+Att.Narrow <- subset(TBRays, 
+           home_win_pct-away_win_pct > 0)           #performs operation within constraint...all variables in original dataframe (TBRays) included that satisfy condition
+
+
+#Transforming Variables (Feature Engineering)
+WAR.scale <- scale(Brewers$WAR)   #Z-Scores (how many SD +/- the mean)
+
+WAR.log <- log(Brewers$WAR)       #log if no 0 values [good for skewed data]
+WAR.log <- log(Brewers$WAR +1)    #log if 0 values present [good for skewed data]
+
+TBRays$weekend <- ifelse(TBRays$day_of_week_effect > 5 |           #DV for Weekends
+                           TBRays$day_of_week_effect < 2, 1, 0)    
+
+#Creating Frequency Tables for Cateogrical Variables
+Team.Freq <- table(TBRays$opposing_team)
+Team.Freq <- Team.Freq[order(Team.Freq,
+                             decreasing =T)]
+prop.table(Team.Freq)
+round(prop.table(Team.Freq),2)  
+
+
+#To get the log of a variable
+log(TBRays$attendance)
+
+
+
+#Creating a FXN       
+square <- function(number) {    #name of new function = square
+  return(number*number)         #fxn will return the number entered multiplied by the number entered
+}                               #beginning and ending of fxn defined by {}
+
+square (9)  #81
+
+lollygag <- function(name) {    #name must be in Quotes
+  paste("Hello", name)          #fxn will paste "Hello xxx"
+}
+
+lollygag("Elena")   #"Hello Elena"
+
+birthday <- function(name,age){  #name must be in Quotes
+  paste("Happy ",                #age is just a number
+        age,
+        "th Birthday, ", 
+        name, 
+        "!", 
+        sep = '')
+}
+
+#Basic Loops
+for(i in 1:10) {print(i*2)}
+   #...for numbers 1-10 (specified w/ 1:10)
+   #...will print each number * 2
+
